@@ -5,42 +5,193 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Forest</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nanum+Brush+Script&display=swap" rel="stylesheet">
-
     <style>
-        body {
-            margin: 0;
-            background-color: #000;
-            height: 100vh;
-            font-family: "Nanum Brush Script", cursive;
-        }
+      * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+      }
 
-        .quote {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #fff;
-            font-size: 3rem;
-            text-align: center;
-            white-space: pre-line;
-        }
+      body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+          background: #ffffff;
+          color: #111;
+      }
 
-        @media (max-width: 600px) {
-            .quote {
-                font-size: 2rem;
-            }
-        }
+      #content {
+          height: calc(100vh - 60px);
+          overflow-y: auto;
+          padding: 20px 0;
+      }
+
+      #input {
+          height: 60px;
+          background: #fff;
+          border-top: 1px solid #ddd;
+          display: flex;
+          align-items: center;
+          box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .container {
+          max-width: 600px;
+          width: 100%;
+          margin: 0 auto;
+          padding: 0 15px;
+      }
+
+      ul#logList {
+          list-style: none;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+      }
+
+      .log {
+          background: #fff;
+          border: 1px solid #ddd;
+          border-radius: 12px;
+          padding: 12px 16px;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+          word-break: break-word;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+      }
+
+      .log-date {
+          font-size: 12px;
+          color: #666;
+      }
+
+      .log-text {
+          font-size: 15px;
+          color: #111;
+      }
+
+      #logForm {
+          display: flex;
+          gap: 10px;
+          width: 100%;
+      }
+
+      #logInput {
+          flex: 1;
+          padding: 8px 12px;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          font-size: 14px;
+          outline: none;
+      }
+
+      button[type="submit"] {
+          background: #000;
+          border: none;
+          color: white;
+          padding: 8px 16px;
+          font-size: 20px;
+          font-weight: bold;
+          border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: background 0.2s ease;
+      }
+
+      button[type="submit"]:hover {
+          background: #333;
+      }
     </style>
 </head>
 
 <body>
-    <div class="quote">
-        자기 자신과의 약속을 지켜나가다 보면<br>
-        내가 지킨 약속들이 나를 지킨다
+    <div id="content">
+        <div class="container">
+            <ul id="logList"></ul>
+        </div>
+    </div>
+    <div id="input">
+        <div class="container">
+            <form id="logForm">
+                <input id="logInput" type="text" placeholder="오늘의 로그를 입력하세요..." required />
+                <button type="submit" aria-label="로그 추가">+</button>
+            </form>
+        </div>
     </div>
 </body>
+<script>
+    const IS_DEV = location.hostname == 'localhost' || location.hostname == '127.0.0.1';
+    const base_url = IS_DEV ? 'http://localhost:3000' : 'http://52.62.40.48:3000';
+
+    const form = document.querySelector('#logForm');
+    const input = document.querySelector('#logInput');
+    const ul = document.querySelector('#logList');
+
+    const data = [];
+
+    function createLogElement(entry) {
+        const li = document.createElement('li');
+        li.className = 'log';
+
+        const date = document.createElement('div');
+        date.className = 'log-date';
+        date.innerText = new Date(entry.date).toLocaleString();
+
+        const text = document.createElement('div');
+        text.className = 'log-text';
+        text.innerText = entry.text;
+
+        li.appendChild(date);
+        li.appendChild(text);
+        return li;
+    }
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+
+        if (input.value.trim() === '') return;
+
+        const newEntry = { text: input.value };
+        try {
+            const response = await fetch(base_url + '/api/log', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newEntry)
+            });
+            if (!response.ok)
+                throw new Error(`서버 오류: ${response.status}`);
+
+            const savedEntry = await response.json();
+            data.push(savedEntry);
+            ul.appendChild(createLogElement(savedEntry));
+            input.value = '';
+        } catch (err) {
+            console.error('서버에 저장 실패:', err);
+        }
+    }
+
+    async function init() {
+        try {
+            const response = await fetch(base_url + '/api/log', {
+                method: 'GET'
+            });
+            if (!response.ok)
+                throw new Error(`서버 오류: ${response.status}`);
+
+            const entries = await response.json();
+            entries.forEach(entry => {
+                data.push(entry);
+                ul.appendChild(createLogElement(entry));
+            });
+        } catch (err) {
+            console.error('서버에서 데이터 가져오기 실패:', err);
+        }
+    }
+
+    init();
+</script>
 
 </html>
