@@ -123,8 +123,9 @@
     </div>
 </body>
 <script>
-    const IS_DEV = location.hostname == 'localhost' || location.hostname == '127.0.0.1';
-    const base_url = IS_DEV ? 'http://localhost:3000' : 'http://52.62.40.48:3000';
+    // const IS_DEV = location.hostname == 'localhost' || location.hostname == '127.0.0.1';
+    const IS_DEV = false;
+    const base_url = IS_DEV ? 'http://localhost:3000' : 'www.hightree.r-e.kr';
 
     const form = document.querySelector('#logForm');
     const input = document.querySelector('#logInput');
