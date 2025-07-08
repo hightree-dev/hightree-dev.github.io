@@ -168,6 +168,9 @@
             data.push(savedEntry);
             ul.appendChild(createLogElement(savedEntry));
             input.value = '';
+
+            const content = document.querySelector('#content');
+            content.scrollTop = content.scrollHeight;
         } catch (err) {
             console.error('서버에 저장 실패:', err);
         }
@@ -186,6 +189,8 @@
                 data.push(entry);
                 ul.appendChild(createLogElement(entry));
             });
+            const content = document.querySelector('#content');
+            content.scrollTop = content.scrollHeight;
         } catch (err) {
             console.error('서버에서 데이터 가져오기 실패:', err);
         }
