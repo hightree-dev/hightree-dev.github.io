@@ -104,10 +104,28 @@
       button[type="submit"]:hover {
           background: #333;
       }
+
+      #lock {
+        position: fixed;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        background: white;
+      }
+
+      #lock > input {
+        border: 1px solid black;
+      }
     </style>
 </head>
 
 <body>
+    <div id="lock">
+        <input type="password"/>
+    </div>
     <div id="content">
         <div class="container">
             <ul id="logList"></ul>
@@ -175,6 +193,15 @@
             console.error('서버에 저장 실패:', err);
         }
     }
+
+    const lock = document.querySelector('#lock')
+    const password = lock.querySelector('input')
+    password.oninput = (e) => {
+        if (e.target.value === '1124')
+            lock.remove()
+    }
+    
+    
 
     async function init() {
         try {
